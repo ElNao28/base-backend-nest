@@ -1,0 +1,28 @@
+version: '1.0.0'
+
+services:
+  postgresDB:
+    image: postgres:14.20-alpine
+    container_name: postgresDB
+    restart: always
+    ports:
+      - ${DB_PORT}:5432
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql
+
+  pgAdmin:
+    image: elestio/pgadmin:REL-9_8
+    container_name: pgAdmin
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_PORT}
+    ports:
+      - ${PGADMIN_EXPOSE_PORT}:${PGADMIN_PORT}
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
