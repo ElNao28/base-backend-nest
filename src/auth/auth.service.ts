@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -66,15 +70,19 @@ export class AuthService {
   }
 
   /**
-   * 
+   *
    * @param id - id of user deleted
    * @returns returns empy data, only return status action
    */
   public async deleteUserById(id: string) {
-    try {
-      return await this.userRepository.softDelete({ id });
-    } catch (error) {
-      HandlerDataBaseErrors(error);
-    }
+
+    const deletedUser = await this.userRepository.softDelete({ id });
+
+    if (deletedUser.affected === 0)
+      throw new ConflictException(
+        `Can't delete user with: ${id}`,
+      );
+
+      return deletedUser;
   }
 }

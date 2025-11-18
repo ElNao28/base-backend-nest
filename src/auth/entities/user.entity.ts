@@ -52,6 +52,12 @@ export class User {
   })
   password: string;
 
+  @Column({
+    type: 'bool',
+    default: true,
+  })
+  isActive: boolean;
+
   @DeleteDateColumn()
   deleteAt?: Date;
 }
