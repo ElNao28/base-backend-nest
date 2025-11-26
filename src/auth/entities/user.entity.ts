@@ -4,9 +4,11 @@ import {
   Column,
   DeleteDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Roles } from './roles.entity';
 
 @Entity({
   name: 'users',
@@ -58,11 +60,17 @@ export class User {
   @Column({
     type: 'bool',
     default: true,
+    name: 'is_active',
   })
   isActive: boolean;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({
+    name: 'delete_at',
+  })
   deleteAt?: Date;
+
+  @ManyToOne(() => Roles, (roles) => roles.user, { eager: true })
+  roles: Roles[];
 
   @BeforeInsert()
   hashPasswordBfInsert() {

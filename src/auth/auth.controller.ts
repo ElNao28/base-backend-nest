@@ -15,6 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UserRolesGuard } from './guards/user-roles.guard';
+import { CreateRoleDto } from './dto/create-role.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -48,6 +49,11 @@ export class AuthController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.authService.updateUserById(id, updateUserDto);
+  }
+
+  @Post('role')
+  public createRole(@Body() createRoleDto: CreateRoleDto) {
+    return this.authService.createRole(createRoleDto);
   }
 
   @Post('login')

@@ -14,12 +14,16 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { Roles } from './entities/roles.entity';
+import { CreateRoleDto } from './dto/create-role.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Roles)
+    private readonly roleRepository: Repository<Roles>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -44,7 +48,9 @@ export class AuthService {
    */
   public async getAllUsers() {
     try {
-      const users = await this.userRepository.find({});
+      const users = await this.userRepository.find({
+        relations:['roles']
+      });
       return users;
     } catch (error) {
       HandlerDataBaseErrors(error);
@@ -137,5 +143,15 @@ export class AuthService {
       token,
       message: 'Login success',
     };
+  }
+
+  public async createRole(createRoleDto: CreateRoleDto) {
+    try {
+      const newRole = this.roleRepository.create(createRoleDto);
+
+      return await this.roleRepository.save(newRole);
+    } catch (error) {
+      HandlerDataBaseErrors(error);
+    }
   }
 }
