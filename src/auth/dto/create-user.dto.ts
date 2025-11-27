@@ -1,6 +1,8 @@
 import {
+  IsArray,
   IsBoolean,
   IsEmail,
+  IsInt,
   IsOptional,
   IsString,
   MinLength,
@@ -35,4 +37,10 @@ export class CreateUserDto {
   @IsBoolean()
   @IsOptional()
   isActive: boolean;
+
+  @IsInt({
+    each: true,
+  })
+  @IsArray()
+  roles: number[];
 }

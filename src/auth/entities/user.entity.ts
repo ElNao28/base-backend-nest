@@ -4,7 +4,8 @@ import {
   Column,
   DeleteDateColumn,
   Entity,
-  ManyToOne,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -69,7 +70,10 @@ export class User {
   })
   deleteAt?: Date;
 
-  @ManyToOne(() => Roles, (roles) => roles.user, { eager: true })
+  @ManyToMany(() => Roles)
+  @JoinTable({
+    name: 'users_roles',
+  })
   roles: Roles[];
 
   @BeforeInsert()

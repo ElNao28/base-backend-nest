@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -8,7 +9,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { HandlerDataBaseErrors } from 'src/common/helpers/handler-database-errors.helper';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -33,13 +34,25 @@ export class AuthService {
    * @returns returns the new user created
    */
   public async createNewUser(createUserDto: CreateUserDto) {
-    try {
-      const user = this.userRepository.create(createUserDto);
-      const saveUser = await this.userRepository.save(user);
-      return saveUser;
-    } catch (error) {
-      HandlerDataBaseErrors(error);
-    }
+    const { roles: rolesId, ...userData } = createUserDto;
+
+    if (rolesId.length <= 0)
+      throw new BadRequestException('Some roles do not exist');
+
+    const roles = await this.roleRepository.findBy({
+      id: In(rolesId),
+    });
+
+    if (roles.length !== rolesId.length)
+      throw new BadRequestException('Some roles do not exist');
+
+    const newUser = this.userRepository.create({
+      ...userData,
+      roles,
+    });
+
+    const saveUser = await this.userRepository.save(newUser);
+    return saveUser;
   }
 
   /**
@@ -49,7 +62,7 @@ export class AuthService {
   public async getAllUsers() {
     try {
       const users = await this.userRepository.find({
-        relations:['roles']
+        relations: ['roles'],
       });
       return users;
     } catch (error) {
@@ -92,9 +105,11 @@ export class AuthService {
    * @returns returns data of user updated
    */
   public async updateUserById(id: string, updateUserDto: UpdateUserDto) {
+    const { roles, ...uptUser } = updateUserDto;
+
     const updateUser = await this.userRepository.preload({
       id,
-      ...updateUserDto,
+      ...uptUser,
     });
 
     if (!updateUser)
