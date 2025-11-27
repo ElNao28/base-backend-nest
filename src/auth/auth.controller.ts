@@ -13,8 +13,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { CreateRoleDto } from './dto/create-role.dto';
-import { ValidRoles } from './decorators/authorize.decorator';
 import { Auth } from './decorators/auth.decorator';
+import { ValidRoles } from './decorators/authorize.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -31,16 +31,19 @@ export class AuthController {
     return this.authService.getAllUsers();
   }
 
+  @Auth()
   @Get('users/:id')
   public getUserById(@Param('id', ParseUUIDPipe) id: string) {
     return this.authService.getUserById(id);
   }
 
+  @Auth()
   @Delete('users/:id')
   public deleteUserById(@Param('id', ParseUUIDPipe) id: string) {
     return this.authService.deleteUserById(id);
   }
 
+  @Auth()
   @Patch('users/update/:id')
   public updateUserById(
     @Param('id', ParseUUIDPipe)
@@ -50,6 +53,7 @@ export class AuthController {
     return this.authService.updateUserById(id, updateUserDto);
   }
 
+  @Auth(ValidRoles.Admin)
   @Post('role')
   public createRole(@Body() createRoleDto: CreateRoleDto) {
     return this.authService.createRole(createRoleDto);
