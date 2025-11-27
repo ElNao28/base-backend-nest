@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -9,7 +10,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { HandlerDataBaseErrors } from 'src/common/helpers/handler-database-errors.helper';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -37,7 +38,7 @@ export class AuthService {
     const { roles: rolesId, ...userData } = createUserDto;
 
     if (rolesId.length <= 0)
-      throw new BadRequestException('Some roles do not exist');
+      throw new BadRequestException('A user must have at least one role');
 
     const roles = await this.roleRepository.findBy({
       id: In(rolesId),
@@ -111,12 +112,28 @@ export class AuthService {
     });
 
     if (!updateUser)
-      throw new NotFoundException(`User with id: ${id} not found`);
+      throw new NotFoundException(`User with id ${id} was not found`);
+
+    if (roles !== undefined) {
+      if (roles.length === 0)
+        throw new BadRequestException('A user must have at least one role');
+
+      const newRoles = await this.roleRepository.findBy({
+        id: In(roles),
+      });
+
+      if (roles.length !== newRoles.length)
+        throw new BadRequestException('Some roles do not exist');
+
+      updateUser.roles = newRoles;
+    }
 
     try {
-      const saveUser = await this.userRepository.save(updateUser);
-      return saveUser;
+      return await this.userRepository.save(updateUser);
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       HandlerDataBaseErrors(error);
     }
   }

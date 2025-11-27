@@ -25,7 +25,7 @@ export class AuthController {
     return this.authService.createNewUser(createUserDto);
   }
 
-  @Auth(ValidRoles.User)
+  @Auth()
   @Get('users')
   public getAllUsers() {
     return this.authService.getAllUsers();
