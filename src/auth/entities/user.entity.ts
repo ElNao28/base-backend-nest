@@ -21,12 +21,14 @@ export class User {
   @Column({
     type: 'text',
     nullable: false,
+    name: 'first_name',
   })
   firtsname: string;
 
   @Column({
     type: 'text',
     nullable: false,
+    name: 'last_name',
   })
   lastname: string;
 
@@ -45,7 +47,8 @@ export class User {
   email: string;
 
   @Column({
-    type: 'int',
+    type: 'varchar',
+    length: 10,
     nullable: false,
     unique: true,
   })

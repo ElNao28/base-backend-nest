@@ -13,11 +13,18 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { diskStorage } from 'multer';
 import { FileNamer } from './helpers/fileNamer.helper';
 import type { Response } from 'express';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { FileUploadDto } from './file-upload.dto';
 
 @Controller('upload-files')
 export class UploadFilesController {
   constructor(private readonly uploadFilesService: UploadFilesService) {}
 
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Image upload',
+    type: FileUploadDto,
+  })
   @Auth()
   @Post('upload-image')
   @UseInterceptors(
@@ -28,6 +35,7 @@ export class UploadFilesController {
       }),
     }),
   )
+  @ApiBearerAuth()
   public uploadImages(@UploadedFile() file: Express.Multer.File) {
     console.log(file);
   }
