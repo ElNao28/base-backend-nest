@@ -109,12 +109,12 @@ export class AuthService {
     } = this.configService.get<JwtConfig>('jwt')!;
 
     const tokens: GenerateTokens = {
-      accessToken: this.generateJwtToken(
+      accessToken: this.generateJwtAccesssToken(
         payload,
         PRIVATE_KEY_ACCESS_TOKEN,
         EXPIRES_TIME_ACCESS_TOKEN,
       ),
-      refreshToken: this.generateJwtToken(
+      refreshToken: this.generateJwtRefreshToken(
         payload,
         PRIVATE_KEY_REFRESH_TOKEN,
         EXPIRES_TIME_REFRESH_TOKEN,
@@ -131,7 +131,62 @@ export class AuthService {
     return tokens;
   }
 
-  private generateJwtToken(
+  public async regenerateAccessToken(queryToken: string) {
+    const {
+      PRIVATE_KEY_REFRESH_TOKEN,
+      PRIVATE_KEY_ACCESS_TOKEN,
+      EXPIRES_TIME_ACCESS_TOKEN,
+    } = this.configService.get<JwtConfig>('jwt')!;
+
+    let refreshToken: PayloadJwt | null = null;
+
+    try {
+      refreshToken = this.jwtService.verify<PayloadJwt>(queryToken, {
+        secret: PRIVATE_KEY_REFRESH_TOKEN,
+      });
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const foundToken = await this.refreshTokenRepository.findOne({
+      where: {
+        jti: refreshToken.jti,
+        revoked: false,
+        status: true,
+      },
+    });
+
+    if (!foundToken) throw new UnauthorizedException('Token expired');
+
+    const matchToken = await bcrypt.compare(queryToken, foundToken.tokenHash);
+
+    if (!matchToken) throw new UnauthorizedException('Invalid token');
+
+    const user = await this.userRepository.findOneBy({
+      id: refreshToken.sub,
+      status: true,
+    });
+
+    if (!user) throw new UnauthorizedException('Token expired');
+
+    const payload: PayloadJwt = {
+      sub: user.id,
+      email: user.email,
+      jti: randomUUID(),
+    };
+
+    const newAccessToken = this.generateJwtAccesssToken(
+      payload,
+      PRIVATE_KEY_ACCESS_TOKEN,
+      EXPIRES_TIME_ACCESS_TOKEN,
+    );
+
+    return HandlerSuccessResponse.successResponse<{ accessToken: string }>({
+      accessToken: newAccessToken,
+    });
+  }
+
+  private generateJwtAccesssToken(
     payload: PayloadJwt,
     secretKey: string,
     expiresTime: string,
@@ -140,6 +195,20 @@ export class AuthService {
       secret: secretKey,
       expiresIn: expiresTime as any,
     });
+  }
+
+  private generateJwtRefreshToken(
+    { sub, jti }: PayloadJwt,
+    secretKey: string,
+    expiresTime: string,
+  ): string {
+    return this.jwtService.sign(
+      { sub, jti },
+      {
+        secret: secretKey,
+        expiresIn: expiresTime as any,
+      },
+    );
   }
 
   private async saveRefreshToken(
