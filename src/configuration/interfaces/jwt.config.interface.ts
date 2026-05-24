@@ -1,0 +1,6 @@
+export interface JwtConfig {
+  EXPIRES_TIME_ACCESS_TOKEN: string;
+  EXPIRES_TIME_REFRESH_TOKEN: string;
+  PRIVATE_KEY_ACCESS_TOKEN: string;
+  PRIVATE_KEY_REFRESH_TOKEN: string;
+}
