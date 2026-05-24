@@ -22,6 +22,11 @@ export class RefreshToken extends BaseColumns {
   @Column({ default: false })
   revoked: boolean;
 
+  @Column({
+    unique: true,
+  })
+  jti: string;
+
   @ManyToOne(() => User, (user) => user.refreshTokens)
   @JoinColumn({
     name: 'user_id',
