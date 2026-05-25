@@ -76,7 +76,9 @@ export class AuthService {
         id: true,
         email: true,
         password: true,
+        rol: true,
       },
+      relations: ['rol'],
     });
 
     if (!foundUser)
@@ -93,12 +95,13 @@ export class AuthService {
   }
 
   private async generateTokensFromSignIn(user: User): Promise<GenerateTokens> {
-    const { id: sub, email } = user;
+    const { id: sub, email, rol } = user;
     const jti = randomUUID();
     const payload: PayloadJwt = {
       sub,
       email,
       jti,
+      rol,
     };
 
     const {
@@ -162,9 +165,9 @@ export class AuthService {
 
     if (!matchToken) throw new UnauthorizedException('Invalid token');
 
-    const user = await this.userRepository.findOneBy({
-      id: refreshToken.sub,
-      status: true,
+    const user = await this.userRepository.findOne({
+      where: { id: refreshToken.sub, status: true },
+      relations: ['rol'],
     });
 
     if (!user) throw new UnauthorizedException('Token expired');
@@ -173,6 +176,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       jti: randomUUID(),
+      rol: user.rol,
     };
 
     const newAccessToken = this.generateJwtAccesssToken(
