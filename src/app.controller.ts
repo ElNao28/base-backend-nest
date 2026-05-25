@@ -1,11 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
-import { Public } from './auth/decorators/public-decorator.decorator';
+import { Authorization } from './auth/decorators/authorization.decorator';
+import { ROLES } from './auth/decorators/roles.decorator';
 
 @Controller()
 export class AppController {
   constructor() {}
 
-  @Public()
+  @Authorization(ROLES.SUPER_ADMIN)
   @Get()
   getHello(): string {
     return 'Hello world';
