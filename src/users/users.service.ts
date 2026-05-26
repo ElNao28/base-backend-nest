@@ -4,6 +4,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { HandlerSuccessResponse } from '../common/utils/handler-success-response';
+import { handleDatabaseErrors } from '../common/utils/handler-db-error';
 
 @Injectable()
 export class UsersService {
@@ -38,5 +39,22 @@ export class UsersService {
     if (!foundUser) throw new NotFoundException('User not found');
 
     return HandlerSuccessResponse.successResponse<User>(foundUser);
+  }
+
+  public async deleteUserById(idUser: string) {
+    const foundUser = await this.userRepository.findOne({
+      where: {
+        id: idUser,
+      },
+    });
+
+    if (!foundUser) throw new NotFoundException('User not found');
+
+    try {
+      await this.userRepository.softDelete({ id: idUser });
+      return HandlerSuccessResponse.successResponse<boolean>(true);
+    } catch (error) {
+      handleDatabaseErrors(error);
+    }
   }
 }
