@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { HandlerSuccessResponse } from '../common/utils/handler-success-response';
 import { handleDatabaseErrors } from '../common/utils/handler-db-error';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -39,6 +40,19 @@ export class UsersService {
     if (!foundUser) throw new NotFoundException('User not found');
 
     return HandlerSuccessResponse.successResponse<User>(foundUser);
+  }
+
+  public async updateUser(updateUserDto: UpdateUserDto, idUser: string) {
+    const foundUser = await this.userRepository.findOne({
+      where: { id: idUser, status: true },
+    });
+    if (!foundUser) throw new NotFoundException('User not found');
+    try {
+      await this.userRepository.update(idUser, updateUserDto);
+      return HandlerSuccessResponse.successResponse<boolean>(true);
+    } catch (error) {
+      handleDatabaseErrors(error);
+    }
   }
 
   public async deleteUserById(idUser: string) {
