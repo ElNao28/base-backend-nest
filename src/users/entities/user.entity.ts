@@ -3,11 +3,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Rol } from './rol.entity';
+import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -82,5 +85,9 @@ export class User {
   deleteAt: Date;
 
   @ManyToOne(() => Rol, (rol) => rol.user)
+  @JoinColumn({ name: 'rol_id' })
   rol: Rol;
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[];
 }

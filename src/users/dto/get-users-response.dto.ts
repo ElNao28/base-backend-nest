@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { BodyResponseDto } from '../../common/dto/body-response.dto';
+import { UserDto } from './user.dto';
 
-export class ResponseRegisterUserDto extends BodyResponseDto {
+export class GetUsersResponseDto extends BodyResponseDto {
   @ApiProperty()
-  data: boolean;
+  data: UserDto;
 }

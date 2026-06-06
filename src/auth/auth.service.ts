@@ -18,9 +18,14 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtConfig } from '../configuration/interfaces/jwt.config.interface';
 import { PayloadJwt } from './interfaces/payload-jwt.interface';
 import { GenerateTokens } from './interfaces/generate-tokens.interface';
+import { RefreshToken } from './entities/refresh-token.entity';
+import ms from 'ms';
+import { randomUUID } from 'crypto';
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Rol) private readonly rolRepository: Repository<Rol>,
     private readonly configService: ConfigService,
@@ -30,8 +35,10 @@ export class AuthService {
   public async registerUser(registerUserDto: RegisterUserDto) {
     const { password, rolId, ...userData } = registerUserDto;
 
-    const roundsHash = this.configService.get<number>('auth.ROUNDS_HASH')!;
-    const passwordHash = await bcrypt.hash(password, roundsHash);
+    const roundsHash = this.configService.get<number>(
+      'auth.ROUND_HASH_PASSWORD',
+    )!;
+    const passwordHash = await bcrypt.hash(password, +roundsHash);
 
     const foundUser = await this.userRepository.findOne({
       where: [{ email: userData.email }, { phone: userData.phone }],
@@ -69,7 +76,9 @@ export class AuthService {
         id: true,
         email: true,
         password: true,
+        rol: true,
       },
+      relations: ['rol'],
     });
 
     if (!foundUser)
@@ -79,16 +88,20 @@ export class AuthService {
 
     if (!matchPassword)
       throw new UnauthorizedException('Email or password incorrect');
-    return HandlerSuccessResponse.successResponse<GenerateTokens>(
-      this.generateTokensFromSignIn(foundUser),
-    );
+
+    const tokens = await this.generateTokensFromSignIn(foundUser);
+
+    return HandlerSuccessResponse.successResponse<GenerateTokens>(tokens);
   }
 
-  private generateTokensFromSignIn(user: User): GenerateTokens {
-    const { id: sub, email } = user;
+  private async generateTokensFromSignIn(user: User): Promise<GenerateTokens> {
+    const { id: sub, email, rol } = user;
+    const jti = randomUUID();
     const payload: PayloadJwt = {
       sub,
       email,
+      jti,
+      rol,
     };
 
     const {
@@ -98,21 +111,86 @@ export class AuthService {
       PRIVATE_KEY_REFRESH_TOKEN,
     } = this.configService.get<JwtConfig>('jwt')!;
 
-    return {
-      accessToken: this.generateJwtToken(
+    const tokens: GenerateTokens = {
+      accessToken: this.generateJwtAccesssToken(
         payload,
         PRIVATE_KEY_ACCESS_TOKEN,
         EXPIRES_TIME_ACCESS_TOKEN,
       ),
-      refreshToken: this.generateJwtToken(
+      refreshToken: this.generateJwtRefreshToken(
         payload,
         PRIVATE_KEY_REFRESH_TOKEN,
         EXPIRES_TIME_REFRESH_TOKEN,
       ),
     };
+
+    await this.saveRefreshToken(
+      tokens.refreshToken,
+      user,
+      jti,
+      EXPIRES_TIME_REFRESH_TOKEN,
+    );
+
+    return tokens;
   }
 
-  private generateJwtToken(
+  public async regenerateAccessToken(queryToken: string) {
+    const {
+      PRIVATE_KEY_REFRESH_TOKEN,
+      PRIVATE_KEY_ACCESS_TOKEN,
+      EXPIRES_TIME_ACCESS_TOKEN,
+    } = this.configService.get<JwtConfig>('jwt')!;
+
+    let refreshToken: PayloadJwt | null = null;
+
+    try {
+      refreshToken = this.jwtService.verify<PayloadJwt>(queryToken, {
+        secret: PRIVATE_KEY_REFRESH_TOKEN,
+      });
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const foundToken = await this.refreshTokenRepository.findOne({
+      where: {
+        jti: refreshToken.jti,
+        revoked: false,
+        status: true,
+      },
+    });
+
+    if (!foundToken) throw new UnauthorizedException('Token expired');
+
+    const matchToken = await bcrypt.compare(queryToken, foundToken.tokenHash);
+
+    if (!matchToken) throw new UnauthorizedException('Invalid token');
+
+    const user = await this.userRepository.findOne({
+      where: { id: refreshToken.sub, status: true },
+      relations: ['rol'],
+    });
+
+    if (!user) throw new UnauthorizedException('Token expired');
+
+    const payload: PayloadJwt = {
+      sub: user.id,
+      email: user.email,
+      jti: randomUUID(),
+      rol: user.rol,
+    };
+
+    const newAccessToken = this.generateJwtAccesssToken(
+      payload,
+      PRIVATE_KEY_ACCESS_TOKEN,
+      EXPIRES_TIME_ACCESS_TOKEN,
+    );
+
+    return HandlerSuccessResponse.successResponse<{ accessToken: string }>({
+      accessToken: newAccessToken,
+    });
+  }
+
+  private generateJwtAccesssToken(
     payload: PayloadJwt,
     secretKey: string,
     expiresTime: string,
@@ -121,5 +199,43 @@ export class AuthService {
       secret: secretKey,
       expiresIn: expiresTime as any,
     });
+  }
+
+  private generateJwtRefreshToken(
+    { sub, jti }: PayloadJwt,
+    secretKey: string,
+    expiresTime: string,
+  ): string {
+    return this.jwtService.sign(
+      { sub, jti },
+      {
+        secret: secretKey,
+        expiresIn: expiresTime as any,
+      },
+    );
+  }
+
+  private async saveRefreshToken(
+    refreshToken: string,
+    user: User,
+    jti: string,
+    timeExpiration: string,
+  ): Promise<void> {
+    try {
+      const roundsHash = this.configService.get<number>('auth.ROUND_HASH_JWT')!;
+      const tokenHash = await bcrypt.hash(refreshToken, +roundsHash);
+      const expiresAt = new Date(Date.now() + ms(timeExpiration as any));
+
+      const newRefreshToken = this.refreshTokenRepository.create({
+        tokenHash,
+        user,
+        jti,
+        expiresAt,
+      });
+
+      await this.refreshTokenRepository.save(newRefreshToken);
+    } catch (error) {
+      handleDatabaseErrors(error);
+    }
   }
 }
