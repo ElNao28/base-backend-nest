@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { ApiOkResponse, ApiProperty } from '@nestjs/swagger';
+import { ApiOkResponse } from '@nestjs/swagger';
 import { GetUsersResponseDto } from './dto/get-users-response.dto';
 import { Authorization } from '../auth/decorators/authorization.decorator';
 import { ROLES } from '../auth/decorators/roles.decorator';
@@ -42,7 +42,7 @@ export class UsersController {
     return this.usersService.deleteUserById(idUser);
   }
 
-  @ApiProperty({
+  @ApiOkResponse({
     type: UpdateUserResponseDto,
   })
   @Authorization()
