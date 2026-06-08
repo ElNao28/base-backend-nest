@@ -18,9 +18,9 @@ import {
 } from '@nestjs/swagger';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { Public } from '../auth/decorators/public-decorator.decorator';
-import { UploadImageResponse } from './dto/upload-image-response.dto';
 import { Authorization } from '../auth/decorators/authorization.decorator';
 import { UploadImageToCloudinaryResponseDto } from './dto/upload-image-to-cloudinary-response.dto';
+import { UploadImageResponse } from './dto/responses/upload-image-response.dto';
 
 @Controller('upload-files')
 export class UploadFilesController {
