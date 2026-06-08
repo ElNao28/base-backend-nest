@@ -11,14 +11,13 @@ import {
 import { UsersService } from './users.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { ApiOkResponse } from '@nestjs/swagger';
-import { GetUsersResponseDto } from './dto/get-users-response.dto';
 import { Authorization } from '../auth/decorators/authorization.decorator';
 import { ROLES } from '../auth/decorators/roles.decorator';
-import { GetUserByIdResponseDto } from './dto/get-user-by-id-response.dto';
-import { DeleteUserDto } from './dto/delete-user-response.dto';
 import { User } from '../auth/decorators/user.decorator';
+import { GetUserByIdResponseDto } from './dto/responses/get-user-by-id-response.dto';
+import { GetUsersResponseDto } from './dto/responses/get-users-response.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UpdateUserResponseDto } from './dto/update-user-response.dto';
+import { BooleanResponseDto } from '../common/dto/boolean-response.dto';
 
 @Controller('users')
 export class UsersController {
@@ -34,7 +33,7 @@ export class UsersController {
   }
 
   @ApiOkResponse({
-    type: DeleteUserDto,
+    type: BooleanResponseDto,
   })
   @Authorization(ROLES.SUPER_ADMIN, ROLES.ADMIN)
   @Delete('delete/:id')
@@ -43,7 +42,7 @@ export class UsersController {
   }
 
   @ApiOkResponse({
-    type: UpdateUserResponseDto,
+    type: BooleanResponseDto,
   })
   @Authorization()
   @Patch('update')
