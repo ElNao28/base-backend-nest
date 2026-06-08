@@ -8,9 +8,13 @@ import { Readable } from 'stream';
 
 @Injectable()
 export class CloudinaryService {
-  public async uploadImageToCloudinary(file: Express.Multer.File) {
+  public async uploadImageToCloudinary(
+    file: Express.Multer.File,
+    folder: string = 'images',
+  ) {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
+        { folder },
         (
           error: UploadApiErrorResponse | undefined,
           result: UploadApiResponse | undefined,
