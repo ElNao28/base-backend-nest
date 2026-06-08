@@ -12,7 +12,7 @@ export class CloudinaryService {
     file: Express.Multer.File,
     folder: string = 'images',
   ) {
-    return new Promise((resolve, reject) => {
+    return new Promise<UploadApiResponse>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         { folder },
         (
