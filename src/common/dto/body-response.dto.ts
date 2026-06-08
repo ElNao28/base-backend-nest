@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class BodyResponseDto {
   @ApiProperty()
-  statusCode: string;
+  statusCode: number;
   @ApiProperty()
   message: string;
 }

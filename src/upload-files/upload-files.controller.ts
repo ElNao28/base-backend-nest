@@ -20,6 +20,7 @@ import { UploadFileDto } from './dto/upload-file.dto';
 import { Public } from '../auth/decorators/public-decorator.decorator';
 import { UploadImageResponse } from './dto/upload-image-response.dto';
 import { Authorization } from '../auth/decorators/authorization.decorator';
+import { UploadImageToCloudinaryResponseDto } from './dto/upload-image-to-cloudinary-response.dto';
 
 @Controller('upload-files')
 export class UploadFilesController {
@@ -44,6 +45,20 @@ export class UploadFilesController {
     file: Express.Multer.File,
   ) {
     return this.uploadFilesService.uploadFile(file);
+  }
+
+  @Authorization()
+  @ApiOkResponse({
+    type: UploadImageToCloudinaryResponseDto,
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    type: UploadFileDto,
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  @Post('cloudinary')
+  public uploadImageToCloudinary(@UploadedFile() file: Express.Multer.File) {
+    return this.uploadFilesService.uploadImageToCloudinary(file);
   }
 
   @Public()

@@ -5,9 +5,12 @@ import { v4 as uuid } from 'uuid';
 import { createReadStream, existsSync, promises as fsp } from 'fs';
 import { lookup } from 'mime-types';
 import { HandlerSuccessResponse } from '../common/utils/handler-success-response';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UploadFilesService {
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
+
   public async uploadFile(file: Express.Multer.File) {
     const uploadsDir = join(cwd(), 'uploads');
 
@@ -38,5 +41,17 @@ export class UploadFilesService {
       type: mimeType,
       disposition: `inline; filename="${name}"`,
     });
+  }
+
+  public async uploadImageToCloudinary(file: Express.Multer.File) {
+    const uploadedImage =
+      await this.cloudinaryService.uploadImageToCloudinary(file);
+
+    const successResponse = {
+      publicId: uploadedImage.public_id,
+      secureUrl: uploadedImage.secure_url,
+    };
+
+    return HandlerSuccessResponse.successResponse(successResponse);
   }
 }
