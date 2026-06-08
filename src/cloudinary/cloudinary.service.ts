@@ -1,0 +1,35 @@
+import { Injectable } from '@nestjs/common';
+import {
+  v2 as cloudinary,
+  UploadApiErrorResponse,
+  UploadApiResponse,
+} from 'cloudinary';
+import { Readable } from 'stream';
+
+@Injectable()
+export class CloudinaryService {
+  public async uploadImageToCloudinary(file: Express.Multer.File) {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        (
+          error: UploadApiErrorResponse | undefined,
+          result: UploadApiResponse | undefined,
+        ) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+
+          if (!result) {
+            reject(new Error('Upload result undefined'));
+            return;
+          }
+
+          resolve(result);
+        },
+      );
+
+      Readable.from(file.buffer).pipe(uploadStream);
+    });
+  }
+}
