@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+  StreamableFile,
+} from '@nestjs/common';
 import { extname, join } from 'path';
 import { cwd } from 'process';
 import { v4 as uuid } from 'uuid';
@@ -44,14 +50,44 @@ export class UploadFilesService {
   }
 
   public async uploadImageToCloudinary(file: Express.Multer.File) {
-    const uploadedImage =
-      await this.cloudinaryService.uploadImageToCloudinary(file);
+    try {
+      const uploadedImage =
+        await this.cloudinaryService.uploadImageToCloudinary(file);
 
-    const successResponse = {
-      publicId: uploadedImage.public_id,
-      secureUrl: uploadedImage.secure_url,
-    };
+      const successResponse = {
+        publicId: uploadedImage.public_id,
+        secureUrl: uploadedImage.secure_url,
+      };
 
-    return HandlerSuccessResponse.successResponse(successResponse);
+      return HandlerSuccessResponse.successResponse(successResponse);
+    } catch (error) {
+      console.log(error);
+      throw new ServiceUnavailableException(
+        'Could not upload image to Cloudinary',
+      );
+    }
+  }
+
+  public async deleteImageFromCloudinary(publicId: string) {
+    try {
+      const deleteImage =
+        await this.cloudinaryService.deleteImageFromCloudinary(publicId);
+
+      if (deleteImage.result === 'not found') {
+        throw new NotFoundException('Image not found');
+      }
+
+      return HandlerSuccessResponse.successResponse(true);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      console.log(error);
+
+      throw new ServiceUnavailableException(
+        'Could not delete image from Cloudinary',
+      );
+    }
   }
 }

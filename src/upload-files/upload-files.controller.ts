@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   FileTypeValidator,
   Get,
   Param,
@@ -21,6 +22,7 @@ import { Public } from '../auth/decorators/public-decorator.decorator';
 import { Authorization } from '../auth/decorators/authorization.decorator';
 import { UploadImageToCloudinaryResponseDto } from './dto/upload-image-to-cloudinary-response.dto';
 import { UploadImageResponse } from './dto/responses/upload-image-response.dto';
+import { BooleanResponseDto } from '../common/dto/boolean-response.dto';
 
 @Controller('upload-files')
 export class UploadFilesController {
@@ -77,5 +79,14 @@ export class UploadFilesController {
   @Get('image/:path')
   public getImageByName(@Param('path') path: string) {
     return this.uploadFilesService.getImageByName(path);
+  }
+
+  @Authorization()
+  @ApiOkResponse({
+    type: BooleanResponseDto,
+  })
+  @Delete('cloudinary-delete/:publicId')
+  public deleteImageFromCloudinary(@Param('publicId') publicId: string) {
+    return this.uploadFilesService.deleteImageFromCloudinary(publicId);
   }
 }
