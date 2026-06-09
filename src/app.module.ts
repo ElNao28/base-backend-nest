@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { UploadFilesModule } from './upload-files/upload-files.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     AuthModule,
     UploadFilesModule,
     CloudinaryModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [],

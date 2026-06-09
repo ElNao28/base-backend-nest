@@ -4,6 +4,7 @@ import databaseConfig from './config/database.config';
 import authConfiguration from './config/auth.config';
 import jwtConfiguration from './config/jwt.config';
 import cloudinaryConfiguration from './config/cloudinary.config';
+import nodemailerConfiguration from './config/nodemailer.config';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import cloudinaryConfiguration from './config/cloudinary.config';
         authConfiguration,
         jwtConfiguration,
         cloudinaryConfiguration,
+        nodemailerConfiguration,
       ],
     }),
   ],
