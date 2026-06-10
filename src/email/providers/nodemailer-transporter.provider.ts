@@ -2,8 +2,10 @@ import { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
+export const NODEMAILER = 'NODEMAILER';
+
 export const NodemailerTransporterProvider: Provider = {
-  provide: 'Nodemailer',
+  provide: NODEMAILER,
   useFactory: (configService: ConfigService) => {
     return nodemailer.createTransport({
       service: 'Gmail',

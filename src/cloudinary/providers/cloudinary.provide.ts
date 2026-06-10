@@ -2,8 +2,10 @@ import { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 
+export const CLOUDINARY = 'CLOUDINARY';
+
 export const CloudinaryProvide: Provider = {
-  provide: 'cloudinary',
+  provide: CLOUDINARY,
   useFactory: (configService: ConfigService) => {
     return cloudinary.config({
       cloud_name: configService.get<string>('cloudinary.CLOUD_NAME'),
