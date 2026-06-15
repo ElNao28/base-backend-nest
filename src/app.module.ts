@@ -6,6 +6,10 @@ import { ConfigService } from '@nestjs/config';
 import { DataBaseConfig } from './configuration/interfaces/database.config.interface';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { UploadFilesModule } from './upload-files/upload-files.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { EmailModule } from './email/email.module';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -36,6 +40,10 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    UploadFilesModule,
+    CloudinaryModule,
+    EmailModule,
+    WhatsappModule,
   ],
   controllers: [AppController],
   providers: [],

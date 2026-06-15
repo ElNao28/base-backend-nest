@@ -58,3 +58,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /pgadmin
 /postgres
+
+/uploads
+
+.wwebjs_cache/
+wwebjs_auth/
